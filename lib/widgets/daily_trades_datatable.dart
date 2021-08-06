@@ -195,6 +195,7 @@ class DailyTrades {
   List<DailyTradeData> dailyTradeData = [];
 
   void initData(List<Map> tableData) {
+    dailyTradeData = [];
     for (int i = 0; i < tableData.length; i++) {
       dailyTradeData.add(DailyTradeData(
           tableData[i]['symbol'],

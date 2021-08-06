@@ -2,59 +2,40 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:horizontal_data_table/horizontal_data_table.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/gestures.dart';
 
-class StockNewsDataTable extends StatefulWidget {
+class PortfolioTransactionsDataTable extends StatefulWidget {
   //constructor to ask for tabledata
-  const StockNewsDataTable(
+  PortfolioTransactionsDataTable(
       {required this.tableData,
       required this.headerColor,
       required this.leftHandColor});
 
-  final List<Map> tableData;
+  List<Map> tableData;
   final Color headerColor;
   final Color leftHandColor;
 
   @override
-  _StockNewsDataTableState createState() => _StockNewsDataTableState();
+  _PortfolioTransactionsDataTableState createState() =>
+      _PortfolioTransactionsDataTableState();
 }
 
-class _StockNewsDataTableState extends State<StockNewsDataTable> {
+class _PortfolioTransactionsDataTableState
+    extends State<PortfolioTransactionsDataTable> {
   int symbolSort = 0;
-  int dateSort = -1;
+  int valueTradedSort = -1;
 
   @override
   void initState() {
-    stockNews.initData(widget.tableData);
     super.initState();
-  }
-
-  String checkDateSort() {
-    switch (dateSort) {
-      case 0:
-        {
-          return '';
-        }
-      case -1:
-        {
-          return '↓';
-        }
-      case 1:
-        {
-          return '↑';
-        }
-      default:
-        return '';
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    transactions.initData(widget.tableData);
     return Container(
       child: HorizontalDataTable(
         leftHandSideColumnWidth: 80,
-        rightHandSideColumnWidth: 540,
+        rightHandSideColumnWidth: 460,
         isFixedHeader: true,
         headerWidgets: _getTitleWidget(),
         leftSideItemBuilder: _generateFirstColumnRow,
@@ -68,6 +49,7 @@ class _StockNewsDataTableState extends State<StockNewsDataTable> {
         leftHandSideColBackgroundColor: widget.leftHandColor,
         rightHandSideColBackgroundColor: Theme.of(context).backgroundColor,
         enablePullToRefresh: false,
+        elevation: 0.0,
       ),
       height: 53.0 * (widget.tableData.length + 1),
     );
@@ -75,10 +57,11 @@ class _StockNewsDataTableState extends State<StockNewsDataTable> {
 
   List<Widget> _getTitleWidget() {
     return [
+      _getTitleItemWidget("Date", 80),
       _getTitleItemWidget("Symbol", 80),
-      _getTitleItemWidget("Date" + checkDateSort(), 120),
-      _getTitleItemWidget("Title", 300),
-      _getTitleItemWidget("Category", 100),
+      _getTitleItemWidget("Bought/Sold", 100),
+      _getTitleItemWidget("Num Shares", 60),
+      _getTitleItemWidget("Share Price", 80),
     ];
   }
 
@@ -100,10 +83,11 @@ class _StockNewsDataTableState extends State<StockNewsDataTable> {
   Widget _generateFirstColumnRow(BuildContext context, int index) {
     return Container(
       child: Text(
-        stockNews.stockNewsData[index].symbol,
+        DateFormat.yMMMd()
+            .format(transactions.portfolioTransactionData[index].date),
         style: TextStyle(color: Colors.black),
       ),
-      width: 100,
+      width: 80,
       height: 52,
       padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
       alignment: Alignment.centerLeft,
@@ -111,38 +95,47 @@ class _StockNewsDataTableState extends State<StockNewsDataTable> {
   }
 
   Widget _generateRightHandSideColumnRow(BuildContext context, int index) {
-    var formatter = new DateFormat.yMMMMd('en_US');
+    var compactFormat =
+        NumberFormat.compactCurrency(locale: 'en_US', symbol: "\$");
     return Row(
       children: <Widget>[
         Container(
           child: Row(
             children: <Widget>[
               Text(
-                formatter.format(stockNews.stockNewsData[index].date),
-                style: TextStyle(color: Theme.of(context).accentColor),
+                transactions.portfolioTransactionData[index].symbol,
               )
             ],
           ),
-          width: 120,
+          width: 80,
           height: 52,
           padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
           alignment: Alignment.centerLeft,
         ),
         Container(
-          child: new InkWell(
-            child: new Text(stockNews.stockNewsData[index].title,
-                style: TextStyle(color: Theme.of(context).accentColor)),
-            onTap: () => launch(widget.tableData[index]["link"]),
+          child: Text(
+            transactions.portfolioTransactionData[index].boughtOrSold,
           ),
-          width: 300,
+          width: 100,
           height: 52,
           padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
           alignment: Alignment.centerLeft,
         ),
         Container(
-          child: Text(stockNews.stockNewsData[index].category,
-              style: TextStyle(color: Theme.of(context).accentColor)),
-          width: 100,
+          child: Text(
+            transactions.portfolioTransactionData[index].numShares.toString(),
+          ),
+          width: 60,
+          height: 52,
+          padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+        ),
+        Container(
+          child: Text(
+            compactFormat.format(
+                transactions.portfolioTransactionData[index].sharePrice),
+          ),
+          width: 60,
           height: 52,
           padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
           alignment: Alignment.centerLeft,
@@ -152,43 +145,34 @@ class _StockNewsDataTableState extends State<StockNewsDataTable> {
   }
 }
 
-StockNews stockNews = StockNews();
+PortfolioTransactions transactions = PortfolioTransactions();
 
-class StockNews {
-  List<StockNewsData> stockNewsData = [];
+class PortfolioTransactions {
+  List<TransactionData> portfolioTransactionData = [];
 
   void initData(List<Map> tableData) {
+    portfolioTransactionData = [];
     for (int i = 0; i < tableData.length; i++) {
-      stockNewsData.add(StockNewsData(
+      portfolioTransactionData.add(
+        TransactionData(
           tableData[i]['symbol'],
           tableData[i]['date'],
-          tableData[i]['category'],
-          tableData[i]['title']));
-    }
-  }
-
-  void sortSymbol(int symbolSort) {
-    if (symbolSort == -1) {
-      stockNewsData.sort((a, b) => (a.symbol.compareTo(b.symbol)));
-    } else {
-      stockNewsData.sort((a, b) => (b.symbol.compareTo(a.symbol)));
-    }
-  }
-
-  void sortDate(int dateSort) {
-    if (dateSort == -1) {
-      stockNewsData.sort((a, b) => (a.date.compareTo(b.date)));
-    } else {
-      stockNewsData.sort((a, b) => (b.date.compareTo(a.date)));
+          tableData[i]['boughtOrSold'],
+          tableData[i]['numShares'],
+          tableData[i]['sharePrice'],
+        ),
+      );
     }
   }
 }
 
-class StockNewsData {
+class TransactionData {
   String symbol;
-  String category;
   DateTime date;
-  String title;
+  String boughtOrSold;
+  int numShares;
+  double sharePrice;
 
-  StockNewsData(this.symbol, this.date, this.category, this.title);
+  TransactionData(this.symbol, this.date, this.boughtOrSold, this.numShares,
+      this.sharePrice);
 }

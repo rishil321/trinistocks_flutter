@@ -178,7 +178,9 @@ class _FundamentalAnalysisHistoryPageState
               ],
             ),
             fundamentalAnnualHistoryChart,
-            fundamentalQuarterlyHistoryChart,
+            Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: fundamentalQuarterlyHistoryChart),
           ],
         ),
         isLoading: _loading,

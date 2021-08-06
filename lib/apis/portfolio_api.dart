@@ -129,6 +129,62 @@ class PortfolioAPI {
     });
   }
 
+  static Future<List<Map>> getPortfolioTransactions() async {
+    //ensure that the user is signed in
+    return ProfileManagementAPI.checkUserLoggedIn().then(
+      (Map userInfo) async {
+        List<Map> portfolioData = [];
+        if (userInfo['isLoggedIn'] = true) {
+          String url = 'https://trinistocks.com/api/portfoliotransactions';
+          final apiToken = userInfo['token'];
+          var response = await http
+              .get(url, headers: {"Authorization": "Token $apiToken"});
+          List apiResponse = [];
+          if (response.statusCode == 200) {
+            apiResponse = json.decode(response.body);
+            for (Map response in apiResponse) {
+              Map parsedData = new Map();
+              try {
+                parsedData['date'] = DateTime.parse(response['date']);
+              } catch (e) {
+                parsedData['date'] = null;
+              }
+              try {
+                parsedData['boughtOrSold'] = response['bought_or_sold'];
+              } catch (e) {
+                parsedData['boughtOrSold'] = null;
+              }
+              try {
+                parsedData['sharePrice'] =
+                    double.parse(response['share_price']);
+              } catch (e) {
+                parsedData['sharePrice'] = null;
+              }
+              try {
+                parsedData['numShares'] = response['num_shares'];
+              } catch (e) {
+                parsedData['numShares'] = null;
+              }
+              try {
+                parsedData['symbol'] = response['symbol'];
+              } catch (e) {
+                parsedData['symbol'] = null;
+              }
+              portfolioData.add(parsedData);
+            }
+            portfolioData.sort((a, b) => (b['date']).compareTo(a['date']));
+
+            return portfolioData;
+          } else {
+            throw Exception("Could not fetch API data from $url");
+          }
+        } else {
+          return [];
+        }
+      },
+    );
+  }
+
   static Future<Map> addPortfolioTransaction(Map transactionData) async {
     //ensure that the user is signed in
     return ProfileManagementAPI.checkUserLoggedIn().then((Map userInfo) async {

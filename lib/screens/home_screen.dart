@@ -76,71 +76,81 @@ class _HomePageState extends State<HomePage> {
     ); //reset all widgets
     MarketIndexesAPI.fetchMarketIndexData(
             MarketIndexDateRange.oneMonth, "Composite Totals")
-        .then((value) {
-      setState(() {
-        marketIndexesLineChart = MarketIndexesLineChart(
-          value,
-          "Composite Totals",
-          animate: false,
-          chartColor: Theme.of(context).accentColor,
-        );
-      });
-    });
-    FetchDailyTradesAPI.fetchLatestTrades().then((value) {
-      setState(
-        () {
-          headlineText = Text(
-            "Stocks Traded on the TTSE on ${value['date']}",
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.visible,
-            style: Theme.of(context).textTheme.headline6,
-          );
-          latestTradesBarChart = SizedBox(
-            height: 400.0,
-            child: new DailyTradesHorizontalBarChart(
-              value['chartData'],
+        .then(
+      (value) {
+        setState(
+          () {
+            marketIndexesLineChart = MarketIndexesLineChart(
+              value,
+              "Composite Totals",
               animate: false,
               chartColor: Theme.of(context).accentColor,
-            ),
-          );
-          latestTradesTable = new DailyTradesDataTable(
-            tableData: value['tableData'],
-            headerColor: headerColor,
-            leftHandColor: leftHandColor,
-          );
-          isLoading = false;
-        },
-      );
-    });
-    StockNewsAPI.fetch10LatestNews().then((value) {
-      setState(() {
-        stockNewsTable = Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              child: Column(
-                children: <Widget>[
-                  Text(
-                    "Latest Stock News",
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.visible,
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 10),
-                  ),
-                  StockNewsDataTable(
-                    tableData: value,
-                    headerColor: headerColor,
-                    leftHandColor: leftHandColor,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            );
+          },
         );
-      });
-    });
+      },
+    );
+    FetchDailyTradesAPI.fetchLatestTrades().then(
+      (value) {
+        setState(
+          () {
+            headlineText = Text(
+              "Stocks Traded on the TTSE on ${value['date']}",
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.visible,
+              style: Theme.of(context).textTheme.headline6,
+            );
+            latestTradesBarChart = SizedBox(
+              height: 400.0,
+              child: new DailyTradesHorizontalBarChart(
+                value['chartData'],
+                animate: false,
+                chartColor: Theme.of(context).accentColor,
+              ),
+            );
+            latestTradesTable = new DailyTradesDataTable(
+              tableData: value['tableData'],
+              headerColor: headerColor,
+              leftHandColor: leftHandColor,
+            );
+            isLoading = false;
+          },
+        );
+      },
+    );
+    StockNewsAPI.fetch10LatestNews().then(
+      (value) {
+        setState(
+          () {
+            stockNewsTable = Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 10, bottom: 10),
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        "Latest Stock News",
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.visible,
+                        style: Theme.of(context).textTheme.headline6,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 10),
+                      ),
+                      StockNewsDataTable(
+                        tableData: value,
+                        headerColor: headerColor,
+                        leftHandColor: leftHandColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override

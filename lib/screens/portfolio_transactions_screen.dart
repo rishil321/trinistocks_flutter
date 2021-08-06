@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -9,6 +8,8 @@ import 'package:trinistocks_flutter/apis/portfolio_api.dart';
 import 'package:trinistocks_flutter/apis/profile_management_api.dart';
 import 'package:trinistocks_flutter/widgets/main_drawer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:trinistocks_flutter/widgets/portfolio_transactions_datatable.dart';
+import 'package:after_layout/after_layout.dart';
 
 class PortfolioTransactionsPage extends StatefulWidget {
   PortfolioTransactionsPage({Key? key}) : super(key: key);
@@ -18,7 +19,8 @@ class PortfolioTransactionsPage extends StatefulWidget {
       _PortfolioTransactionsPageState();
 }
 
-class _PortfolioTransactionsPageState extends State<PortfolioTransactionsPage> {
+class _PortfolioTransactionsPageState extends State<PortfolioTransactionsPage>
+    with AfterLayoutMixin<PortfolioTransactionsPage> {
   bool isLoading = true;
   TextEditingController numSharesController = new TextEditingController();
   TextEditingController priceController = new TextEditingController();
@@ -31,6 +33,7 @@ class _PortfolioTransactionsPageState extends State<PortfolioTransactionsPage> {
   String boughtOrSold = 'Bought';
   double buttonBarLabelSize = 16;
   double spacing = 20.0;
+  Widget pastPortfolioTransactions = Text("");
 
   @override
   void initState() {
@@ -272,6 +275,7 @@ class _PortfolioTransactionsPageState extends State<PortfolioTransactionsPage> {
                           gravity: ToastGravity.BOTTOM,
                           toastDuration: Duration(seconds: 2),
                         );
+                        Navigator.pushNamed(context, '/portfolio_summary');
                       }
                     },
                   );
@@ -297,13 +301,11 @@ class _PortfolioTransactionsPageState extends State<PortfolioTransactionsPage> {
       endDrawer: MainDrawer(),
       //setup futurebuilders to wait on the API data
       body: LoadingOverlay(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              addTransactionCardView,
-            ],
-          ),
+        child: ListView(
+          children: [
+            addTransactionCardView,
+            pastPortfolioTransactions,
+          ],
         ),
         isLoading: isLoading,
       ),
@@ -372,6 +374,35 @@ class _PortfolioTransactionsPageState extends State<PortfolioTransactionsPage> {
         });
       },
     );
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
+    PortfolioAPI.getPortfolioTransactions().then((List<Map> returnValue) {
+      if (returnValue.isNotEmpty) {
+        setState(
+          () {
+            pastPortfolioTransactions = Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+                side: BorderSide(color: Theme.of(context).accentColor),
+              ),
+              child: PortfolioTransactionsDataTable(
+                  tableData: returnValue,
+                  headerColor: Theme.of(context).primaryColor,
+                  leftHandColor: Theme.of(context).highlightColor),
+            );
+          },
+        );
+      } else {
+        fToast.showToast(
+          child: returnToast(
+              "Could not fetch past portfolio transactions.", false),
+          toastDuration: Duration(seconds: 5),
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    });
   }
 
   Future<Map> addPortfolioTransaction(String symbol, String date,
