@@ -231,6 +231,22 @@ class _MainDrawerState extends State<MainDrawer> {
           ),
           buildPortfolioExpansion(),
           buildSimulatorExpansion(),
+          ListTile(
+            leading: FaIcon(
+              FontAwesomeIcons.solidBell,
+              size: iconSize,
+            ),
+            title: Text(
+              'Stock Notifications',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: itemHeaderSize,
+              ),
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/stock_notifications');
+            },
+          ),
         ],
       ),
     );

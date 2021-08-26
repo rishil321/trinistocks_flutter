@@ -15,6 +15,7 @@ import '../widgets/market_indexes_linechart.dart';
 import '../widgets/daily_trades_datatable.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -38,6 +39,40 @@ class _HomePageState extends State<HomePage> {
   late Color headerColor;
   late Color leftHandColor;
   bool isLoading = true;
+  final BannerAd topBanner = BannerAd(
+    adUnitId: 'ca-app-pub-6367544544740471/8816522502',
+    size: AdSize.banner,
+    request: AdRequest(),
+    listener: BannerAdListener(),
+  );
+  final BannerAd midBanner = BannerAd(
+    adUnitId: 'ca-app-pub-6367544544740471/5324355270',
+    size: AdSize.banner,
+    request: AdRequest(),
+    listener: BannerAdListener(),
+  );
+  final BannerAd bottomBanner = BannerAd(
+    adUnitId: 'ca-app-pub-6367544544740471/9894155671',
+    size: AdSize.banner,
+    request: AdRequest(),
+    listener: BannerAdListener(),
+  );
+  final BannerAdListener listener = BannerAdListener(
+    // Called when an ad is successfully received.
+    onAdLoaded: (Ad ad) => print('Ad loaded.'),
+    // Called when an ad request failed.
+    onAdFailedToLoad: (Ad ad, LoadAdError error) {
+      // Dispose the ad here to free resources.
+      ad.dispose();
+      print('Ad failed to load: $error');
+    },
+    // Called when an ad opens an overlay that covers the screen.
+    onAdOpened: (Ad ad) => print('Ad opened.'),
+    // Called when an ad removes an overlay that covers the screen.
+    onAdClosed: (Ad ad) => print('Ad closed.'),
+    // Called when an impression occurs on the ad.
+    onAdImpression: (Ad ad) => print('Ad impression.'),
+  );
 
   void _onRefresh() async {
     updateAllWidgets();
@@ -48,6 +83,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    topBanner.load();
+    midBanner.load();
+    bottomBanner.load();
     updateAllWidgets();
     new Timer.periodic(
         Duration(minutes: 15),
@@ -155,6 +193,33 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final AdWidget topAdWidget = AdWidget(ad: topBanner);
+    final AdWidget midAdWidget = AdWidget(ad: midBanner);
+    final AdWidget bottomAdWidget = AdWidget(ad: bottomBanner);
+    final Padding topAdContainer = Padding(
+      padding: EdgeInsets.only(bottom: 10),
+      child: Container(
+        alignment: Alignment.center,
+        child: topAdWidget,
+        width: topBanner.size.width.toDouble(),
+        height: topBanner.size.height.toDouble(),
+      ),
+    );
+    final Padding midAdContainer = Padding(
+      padding: EdgeInsets.only(top: 10, bottom: 10),
+      child: Container(
+        alignment: Alignment.center,
+        child: midAdWidget,
+        width: topBanner.size.width.toDouble(),
+        height: topBanner.size.height.toDouble(),
+      ),
+    );
+    final Container bottomAdContainer = Container(
+      alignment: Alignment.center,
+      child: bottomAdWidget,
+      width: topBanner.size.width.toDouble(),
+      height: topBanner.size.height.toDouble(),
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text('Home'),
@@ -170,22 +235,28 @@ class _HomePageState extends State<HomePage> {
           enablePullDown: true,
           enablePullUp: false,
           onRefresh: _onRefresh,
-          child: ListView(padding: const EdgeInsets.all(10.0), children: [
-            Text(
-              "TTSE 30-Day Composite Index",
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.visible,
-              style: Theme.of(context).textTheme.headline6,
-            ),
-            SizedBox(
-              height: 200.0,
-              child: marketIndexesLineChart,
-            ),
-            headlineText,
-            latestTradesBarChart,
-            latestTradesTable,
-            stockNewsTable,
-          ]),
+          child: ListView(
+            padding: const EdgeInsets.all(10.0),
+            children: [
+              topAdContainer,
+              Text(
+                "TTSE 30-Day Composite Index",
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.visible,
+                style: Theme.of(context).textTheme.headline6,
+              ),
+              SizedBox(
+                height: 200.0,
+                child: marketIndexesLineChart,
+              ),
+              headlineText,
+              latestTradesBarChart,
+              midAdContainer,
+              latestTradesTable,
+              stockNewsTable,
+              bottomAdContainer,
+            ],
+          ),
         ),
       ),
     );
